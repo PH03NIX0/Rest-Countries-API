@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@layer base {
+    :root {
+        --radius: 0.5rem
+    }
+
+    .container-main {
+        @apply w-full px-4 sm:px-10 xl:px-[calc((100%_-_1170px)_/_2)] 2xl:px-[calc((100%_-_1250px)_/_2)];
+    }
+}
