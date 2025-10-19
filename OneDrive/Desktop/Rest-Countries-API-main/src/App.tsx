@@ -20,20 +20,26 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Dark mode toggle
   useEffect(() => {
     const root = document.documentElement;
     if (dark) root.classList.add("dark");
     else root.classList.remove("dark");
   }, [dark]);
 
+  // Fetch countries with required fields
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const res = await fetch("https://restcountries.com/v3.1/all");
+        const res = await fetch(
+          "https://restcountries.com/v3.1/all?fields=name,flags,population,region,subregion,capital"
+        );
 
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
         const data = await res.json();
+
+        // Ensure it's always an array
         setCountries(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch countries:", err);
@@ -46,17 +52,20 @@ function App() {
     fetchCountries();
   }, []);
 
-  const filteredCountries = countries.filter((country) => {
-    const matchesSearch = country.name.common
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesRegion =
-      region === "All" ||
-      country.region === region ||
-      country.subregion === region;
+  // Filter countries safely
+  const filteredCountries = Array.isArray(countries)
+    ? countries.filter((country) => {
+        const matchesSearch = country.name.common
+          .toLowerCase()
+          .includes(search.toLowerCase());
+        const matchesRegion =
+          region === "All" ||
+          country.region === region ||
+          country.subregion === region;
 
-    return matchesSearch && matchesRegion;
-  });
+        return matchesSearch && matchesRegion;
+      })
+    : [];
 
   if (loading) {
     return <div className="p-8 text-center text-lg">Loading countries...</div>;
@@ -64,9 +73,7 @@ function App() {
 
   if (error) {
     return (
-      <div className="p-8 text-center text-lg text-red-500">
-        {error}
-      </div>
+      <div className="p-8 text-center text-lg text-red-500">{error}</div>
     );
   }
 
