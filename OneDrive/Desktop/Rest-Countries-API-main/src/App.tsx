@@ -4,12 +4,8 @@ import Home from "./pages/Home";
 import CountryDetail from "./pages/CountryDetail";
 
 interface Country {
-  name: {
-    common: string;
-  };
-  flags: {
-    png: string;
-  };
+  name: { common: string };
+  flags: { png: string };
   population: number;
   region: string;
   subregion?: string;
@@ -22,6 +18,7 @@ function App() {
   const [region, setRegion] = useState("All");
   const [countries, setCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -32,23 +29,15 @@ function App() {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const res = await fetch(
-  "https://restcountries.com/v3.1/all?fields=name,flags,population,region,subregion,capital"
-);
+        const res = await fetch("https://restcountries.com/v3.1/all");
 
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
 
-        // Only set countries if data is actually an array
-        if (Array.isArray(data)) {
-          setCountries(data);
-        } else {
-          console.error("Unexpected API response:", data);
-          setCountries([]);
-        }
+        const data = await res.json();
+        setCountries(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch countries:", err);
-        setCountries([]);
+        setError("Failed to load country data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -57,22 +46,28 @@ function App() {
     fetchCountries();
   }, []);
 
-  const filteredCountries = Array.isArray(countries)
-    ? countries.filter((country) => {
-        const matchesSearch = country.name.common
-          .toLowerCase()
-          .includes(search.toLowerCase());
-        const matchesRegion =
-          region === "All" ||
-          country.region === region ||
-          country.subregion === region;
+  const filteredCountries = countries.filter((country) => {
+    const matchesSearch = country.name.common
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesRegion =
+      region === "All" ||
+      country.region === region ||
+      country.subregion === region;
 
-        return matchesSearch && matchesRegion;
-      })
-    : [];
+    return matchesSearch && matchesRegion;
+  });
 
   if (loading) {
     return <div className="p-8 text-center text-lg">Loading countries...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center text-lg text-red-500">
+        {error}
+      </div>
+    );
   }
 
   return (
