@@ -20,27 +20,30 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Dark mode toggle
   useEffect(() => {
     const root = document.documentElement;
     if (dark) root.classList.add("dark");
     else root.classList.remove("dark");
   }, [dark]);
 
-  // Fetch countries with required fields
   useEffect(() => {
     const fetchCountries = async () => {
       try {
+        // Include fields to avoid 400 error
         const res = await fetch(
           "https://restcountries.com/v3.1/all?fields=name,flags,population,region,subregion,capital"
         );
 
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
         const data = await res.json();
 
-        // Ensure it's always an array
-        setCountries(Array.isArray(data) ? data : []);
+        if (Array.isArray(data)) {
+          setCountries(data);
+        } else {
+          console.error("Unexpected API response:", data);
+          setCountries([]);
+          setError("Failed to load country data. Please try again later.");
+        }
       } catch (err) {
         console.error("Failed to fetch countries:", err);
         setError("Failed to load country data. Please try again later.");
@@ -52,7 +55,7 @@ function App() {
     fetchCountries();
   }, []);
 
-  // Filter countries safely
+  // Safely filter countries
   const filteredCountries = Array.isArray(countries)
     ? countries.filter((country) => {
         const matchesSearch = country.name.common
